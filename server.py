@@ -179,7 +179,7 @@ class VideoTransformTrack(MediaStreamTrack):
 
                 leftEyeHull = cv2.convexHull(leftEye)
                 rightEyeHull = cv2.convexHull(rightEye)
-                print(ear)
+                # print(ear)
                 if ear < EYE_AR_THRESH:
                     self.COUNTER += 1
                     if self.COUNTER >= EYE_AR_CONSEC_FRAMES:
@@ -187,7 +187,7 @@ class VideoTransformTrack(MediaStreamTrack):
                         if not self.ALARM_ON:
                             self.ALARM_ON = True
 
-                        cv2.putText(img, "Alert", (10, 30),
+                        cv2.putText(img, "Alert", (200, 30),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                     # else:
                     #     cv2.putText(frame, "Total face detected = {}".format(len(rects)), (10, 30),
@@ -196,11 +196,14 @@ class VideoTransformTrack(MediaStreamTrack):
                     self.COUNTER = 0
                     self.ALARM_ON = False
 
-                cv2.putText(img, "EAR: {:.2f}".format(ear), (300, 30),
+                # cv2.putText(img, "EAR: {:.2f}".format(ear), (300, 30),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                cv2.putText(img, "EAR: {:.2f}".format(ear), (10, 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             if not self.ALARM_ON:
-                cv2.putText(img, "Total face detected = {}".format(len(rects)), (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            	pass
+                # cv2.putText(img, "Total face detected = {}".format(len(rects)), (10, 30),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
             
             # cv2.imwrite('temp2.jpg', img)
@@ -210,7 +213,7 @@ class VideoTransformTrack(MediaStreamTrack):
             new_frame = VideoFrame.from_ndarray(img, format="bgr24")
             new_frame.pts = frame.pts
             new_frame.time_base = frame.time_base
-            print(self.COUNTER)
+            # print(self.COUNTER)
             return new_frame
 
 
@@ -328,4 +331,4 @@ if __name__ == "__main__":
     app.router.add_get("/", index)
     app.router.add_get("/client.js", javascript)
     app.router.add_post("/offer", offer)
-    web.run_app(app, access_log=None, port=args.port, ssl_context=ssl_context)
+    web.run_app(app, access_log=None, port=os.getenv("PORT",8080), ssl_context=ssl_context)
