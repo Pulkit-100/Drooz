@@ -1,0 +1,14 @@
+Inter Event Durartion (IED) (time taken in closing of eyes and opening of eyes) = (EAR1-EAR2)/(no of frames) 
+
+Percent Time with eyes almost closed (%TEC) = no of frames below open threshold / total no of frames -> will trigger alarm if >0.5
+
+Blink Total Duration (BTD) = no of frames required for EAR to go reach complete opening from closed threshold will trigger alarm if frames>150 and opening still not reached. 
+
+Long Closures (LC) = EAR contin. below closed threshold for > 60 frames
+
+
+opening threshold = avg
+closing threshold = avg/1.5
+
+
+
