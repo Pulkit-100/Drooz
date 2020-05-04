@@ -24,6 +24,7 @@ import playsound
 import argparse
 import imutils
 import dlib
+import random
 
 
 shape_predictor = "shape_predictor_68_face_landmarks.dat"
@@ -264,7 +265,7 @@ class VideoTransformTrack(MediaStreamTrack):
                 self.open_th = self.total_ear/self.total_frames
                 self.closing_th = max(EYE_MIN_CLOSING_TH,self.open_th/EYE_CLOSING_TH_RATIO)
 
-                print(self.counter,self.total_frames)
+                # print(self.counter,self.total_frames)
                 self.TEC_trig = (self.counter/self.total_frames > EYE_TEC_RATIO) and TEC_open and self.total_frames>EYE_TECT_MIN_FRAMES
 
 
@@ -303,7 +304,7 @@ class VideoTransformTrack(MediaStreamTrack):
 
 
             
-            # cv2.imwrite('temp2.jpg', img)
+            
 
             # ret, jpeg = cv2.imencode('.jpg', frame)
             # return jpeg.tobytes()
@@ -311,6 +312,9 @@ class VideoTransformTrack(MediaStreamTrack):
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
             cv2.putText(img, "Closed Th: {:.2f}".format(self.closing_th), (10, 70),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+
+            cv2.imwrite('imgs/temp{}.jpg'.format(random.random()), img)
+
             new_frame = VideoFrame.from_ndarray(img, format="bgr24")
             new_frame.pts = frame.pts
             new_frame.time_base = frame.time_base
@@ -332,7 +336,8 @@ async def javascript(request):
 async def offer(request):
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-
+    # print(offer)
+    # print(vars(offer))
     pc = RTCPeerConnection()
     pc_id = "PeerConnection(%s)" % uuid.uuid4()
     pcs.add(pc)

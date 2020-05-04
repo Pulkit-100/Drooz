@@ -11,4 +11,5 @@ opening threshold = avg
 closing threshold = avg/1.5
 
 
+lt -h "http://serverless.social" -p 8080 --subdomain drooz
 

@@ -16,7 +16,22 @@ function createPeerConnection() {
     };
 
     if (document.getElementById('use-stun').checked) {
-        config.iceServers = [{urls: ['stun:stun.l.google.com:19302']}];
+        config.iceServers = [
+    {
+      'urls': 'stun:stun.l.google.com:19302'}
+    // },
+    // {
+    //   'url': 'turn:numb.viagenie.ca:3478?transport=udp',
+    //   'username': '100messi.m1@gmail.com',
+    //   'credential': 'messi100'
+    // },
+    // {
+    //   'url': 'turn:numb.viagenie.ca:3478?transport=tcp',
+    //   'username': '100messi.m1@gmail.com',
+    //   'credential': 'messi100'
+    // }
+  ]
+        // config.iceServers = [{urls: ['stun:stun.l.google.com:19302']}];
     }
 
     pc = new RTCPeerConnection(config);
