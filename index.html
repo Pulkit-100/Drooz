@@ -2,18 +2,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebRTC demo</title>
-
+    <title>Drooz</title>
+    <link rel="stylesheet" href="./markup-utils/style.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
     />
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   </head>
-  <body>
+  <body class="container">
     <div class="hidden">
       <h2>Options</h2>
-      <div class="">
+      <div class="option">
         <input id="use-datachannel" checked="checked" type="checkbox" />
+        <label for="use-datachannel">Use datachannel</label>
         <select id="datachannel-parameters">
           <option value='{"ordered": true}'>Ordered, reliable</option>
           <option value='{"ordered": false, "maxRetransmits": 0}'
@@ -24,8 +28,9 @@
           >
         </select>
       </div>
-      <div class="">
+      <div class="option">
         <input id="use-audio" type="checkbox" />
+        <label for="use-audio">Use audio</label>
         <select id="audio-codec">
           <option value="default" selected>Default codecs</option>
           <option value="opus/48000/2">Opus</option>
@@ -35,6 +40,7 @@
       </div>
       <div class="option">
         <input id="use-video" checked="checked" type="checkbox" />
+        <label for="use-video">Use video</label>
         <select id="video-resolution">
           <option value="">Default resolution</option>
           <option value="320x240" selected>320x240</option>
@@ -56,22 +62,44 @@
       </div>
       <div class="option">
         <input id="use-stun" type="checkbox" />
+        <label for="use-stun">Use STUN server</label>
       </div>
     </div>
+    <div class="content-area">
+      <div class="top-section">
+        <h2 class="center">Drooz</h2>
+        <h6 class="center">Coffee dose for drivers</h6>
+      </div>
 
-    <button id="start" onclick="start()">Start</button>
-    <button id="stop" style="display: none;" onclick="stop()">Stop</button>
-
-    <div class="hidden">
       <div id="media">
-        <!-- <h2>Media</h2> -->
-
         <audio id="audio" autoplay="true"></audio>
         <video id="video" autoplay="true" playsinline="true"></video>
       </div>
+
+      <div class="status-block">
+        <p class="center">STATUS</p>
+        <div class="output">
+          You Look Awesome!
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button id="start" onclick="start()">Start</button>
+        <button id="stop" onclick="stop()">Stop</button>
+      </div>
     </div>
 
+    <span id="ice-gathering-state"></span>
+    <span id="ice-connection-state"></span>
+    <span id="signaling-state"></span>
+
+    <!-- <h2>Data channel</h2> -->
+    <pre id="data-channel"></pre>
+
+    <pre id="offer-sdp"></pre>
+
+    <pre id="answer-sdp"></pre>
+
     <script src="client.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   </body>
 </html>
