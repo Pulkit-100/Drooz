@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="340" height="340" viewBox="0 0 340 340">
+  <defs>
+    <filter id="Rectangle_29" x="0" y="0" width="340" height="340" filterUnits="userSpaceOnUse">
+      <feOffset dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="7.5" result="blur"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Rectangle_83" x="33" y="28" width="275" height="275" filterUnits="userSpaceOnUse">
+      <feOffset input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="7.5" result="blur-2"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Group_422" data-name="Group 422" transform="translate(-17.5 -22.5)">
+    <g transform="matrix(1, 0, 0, 1, 17.5, 22.5)" filter="url(#Rectangle_29)">
+      <rect id="Rectangle_29-2" data-name="Rectangle 29" width="295" height="295" rx="147.5" transform="translate(22.5 17.5)" fill="#fff" opacity="0.25"/>
+    </g>
+    <g transform="matrix(1, 0, 0, 1, 17.5, 22.5)" filter="url(#Rectangle_83)">
+      <rect id="Rectangle_83-2" data-name="Rectangle 83" width="230" height="230" rx="115" transform="translate(55.5 50.5)" fill="#fff" opacity="0.35"/>
+    </g>
+    <g id="levels" transform="translate(227.47 129.564) rotate(90)">
+      <path id="Path_676" data-name="Path 676" d="M95.8,8.9a12.269,12.269,0,0,0-23.595,0H0v6.742H72.209a12.269,12.269,0,0,0,23.595,0h19.252V8.9Zm-11.8,8.9a5.53,5.53,0,1,1,5.53-5.53A5.536,5.536,0,0,1,84.006,17.8Zm0,0" transform="translate(0)" fill="#fff"/>
+      <path id="Path_677" data-name="Path 677" d="M21.607,125.48a12.291,12.291,0,0,0-11.8,8.9H0v6.742H9.81a12.269,12.269,0,0,0,23.595,0h81.651v-6.742H33.4a12.292,12.292,0,0,0-11.8-8.9Zm0,17.8a5.53,5.53,0,1,1,5.53-5.53A5.536,5.536,0,0,1,21.607,143.282Zm0,0" transform="translate(0 -97.282)" fill="#fff"/>
+      <path id="Path_678" data-name="Path 678" d="M59.418,250.965a12.291,12.291,0,0,0-11.8,8.9H0v6.742H47.62a12.269,12.269,0,0,0,23.595,0h43.841v-6.742H71.215a12.291,12.291,0,0,0-11.8-8.9Zm0,17.8a5.53,5.53,0,1,1,5.53-5.53A5.536,5.536,0,0,1,59.418,268.767Zm0,0" transform="translate(0 -194.568)" fill="#fff"/>
+    </g>
+  </g>
+</svg>
