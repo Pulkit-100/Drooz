@@ -71,10 +71,16 @@ class VideoTransformTrack(MediaStreamTrack):
 
     kind = "video"
 
-    def __init__(self, track, transform):
+    def __init__(self, track, transform, pc):
         super().__init__()  # don't forget this!
         self.track = track
         self.transform = transform
+
+        self.pc = pc
+
+        self.channel = pc.createDataChannel("ALARM",negotiated = True,id = 0)
+
+
         (self.lStart, self.lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
         (self.rStart, self.rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
@@ -91,10 +97,12 @@ class VideoTransformTrack(MediaStreamTrack):
 
         self.ear = 0
 
+        self.prevAlarmState = False
         self.ALARM_ON = False
 
         self.total_ear = 0
         self.total_frames = 0
+        self.frame_no = 0
 
         self.open_th = 0.20
         self.closing_th = 0.15
@@ -104,7 +112,9 @@ class VideoTransformTrack(MediaStreamTrack):
 
 
     async def recv(self):
+        self.frame_no+=1
         frame = await self.track.recv()
+        # print(vars(self.pc))
 
         if self.transform == "cartoon":
             img = frame.to_ndarray(format="bgr24")
@@ -320,6 +330,13 @@ class VideoTransformTrack(MediaStreamTrack):
             new_frame.time_base = frame.time_base
             # print(self.total_frames)
             # print(self.cont_counter)
+            if self.ALARM_ON!= self.prevAlarmState:
+                if self.ALARM_ON:
+                    self.channel.send("1")
+                else:
+                    self.channel.send("0")
+                self.prevAlarmState = self.ALARM_ON
+                # print(self.ALARM_ON)
             return new_frame
 
 
@@ -341,7 +358,7 @@ async def offer(request):
     pc = RTCPeerConnection()
     pc_id = "PeerConnection(%s)" % uuid.uuid4()
     pcs.add(pc)
-
+    # print(vars(pc))
     def log_info(msg, *args):
         logger.info(pc_id + " " + msg, *args)
 
@@ -372,15 +389,20 @@ async def offer(request):
     def on_track(track):
         log_info("Track %s received", track.kind)
         # print("pp")
+        
         if track.kind == "audio":
             pc.addTrack(player.audio)
             recorder.addTrack(track)
         elif track.kind == "video":
             local_video = VideoTransformTrack(
-                track, transform=params["video_transform"]
+                track, transform=params["video_transform"],pc = pc
             )
+            # print(local_video)
+            # print(vars(local_video))
+
             # print("pp2")
             pc.addTrack(local_video)
+            # pc.addTrack(player.audio)
 
         @track.on("ended")
         async def on_ended():

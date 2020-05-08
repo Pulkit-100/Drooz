@@ -54,12 +54,13 @@ function createPeerConnection() {
 
     // connect audio / video
     pc.addEventListener('track', function(evt) {
+        // console.log(evt)
         if (evt.track.kind == 'video')
             document.getElementById('video').srcObject = evt.streams[0];
         else
             document.getElementById('audio').srcObject = evt.streams[0];
     });
-
+    // console.log(pc)
     return pc;
 }
 
@@ -156,7 +157,13 @@ function start() {
                 var elapsed_ms = current_stamp() - parseInt(evt.data.substring(5), 10);
                 dataChannelLog.textContent += ' RTT ' + elapsed_ms + ' ms\n';
             }
+            // console.log(pc)
         };
+    }
+
+    var channel = pc.createDataChannel("ALARM", {negotiated: true, id: 0});
+    channel.onmessage = function(event) {
+        console.log(event.data);
     }
 
     var constraints = {
