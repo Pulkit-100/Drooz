@@ -5,6 +5,7 @@ var dataChannelLog = document.getElementById("data-channel"),
   iceConnectionLog = document.getElementById("ice-connection-state"),
   iceGatheringLog = document.getElementById("ice-gathering-state"),
   signalingLog = document.getElementById("signaling-state");
+console.log(status);
 
 // peer connection
 var pc = null;
@@ -41,32 +42,10 @@ function createPeerConnection() {
   pc = new RTCPeerConnection(config);
 
   // register some listeners to help debugging
-  pc.addEventListener(
-    "icegatheringstatechange",
-    function () {
-      iceGatheringLog.textContent += " -> " + pc.iceGatheringState;
-    },
-    false
-  );
-  iceGatheringLog.textContent = pc.iceGatheringState;
+  pc.addEventListener("icegatheringstatechange", function () {}, false);
+  pc.addEventListener("iceconnectionstatechange", function () {}, false);
 
-  pc.addEventListener(
-    "iceconnectionstatechange",
-    function () {
-      iceConnectionLog.textContent += " -> " + pc.iceConnectionState;
-    },
-    false
-  );
-  iceConnectionLog.textContent = pc.iceConnectionState;
-
-  pc.addEventListener(
-    "signalingstatechange",
-    function () {
-      signalingLog.textContent += " -> " + pc.signalingState;
-    },
-    false
-  );
-  signalingLog.textContent = pc.signalingState;
+  pc.addEventListener("signalingstatechange", function () {}, false);
 
   // connect audio / video
   pc.addEventListener("track", function (evt) {
@@ -115,7 +94,6 @@ function negotiate() {
         offer.sdp = sdpFilterCodec("video", codec, offer.sdp);
       }
 
-      document.getElementById("offer-sdp").textContent = offer.sdp;
       return fetch("/offer", {
         body: JSON.stringify({
           sdp: offer.sdp,
@@ -132,7 +110,6 @@ function negotiate() {
       return response.json();
     })
     .then(function (answer) {
-      document.getElementById("answer-sdp").textContent = answer.sdp;
       return pc.setRemoteDescription(answer);
     })
     .catch(function (e) {
@@ -162,31 +139,33 @@ function start() {
     dc = pc.createDataChannel("chat", parameters);
     dc.onclose = function () {
       clearInterval(dcInterval);
-      dataChannelLog.textContent += "- close\n";
     };
     dc.onopen = function () {
-      dataChannelLog.textContent += "- open\n";
       dcInterval = setInterval(function () {
         var message = "ping " + current_stamp();
-        dataChannelLog.textContent += "> " + message + "\n";
         dc.send(message);
       }, 1000);
     };
     dc.onmessage = function (evt) {
-      dataChannelLog.textContent += "< " + evt.data + "\n";
-
       if (evt.data.substring(0, 4) === "pong") {
         var elapsed_ms = current_stamp() - parseInt(evt.data.substring(5), 10);
-        dataChannelLog.textContent += " RTT " + elapsed_ms + " ms\n";
       }
       // console.log(pc)
     };
   }
 
   var channel = pc.createDataChannel("ALARM", { negotiated: true, id: 0 });
-  channel.onmessage = function (event) {
-    if (event.data === "1") audio.play();
-    else audio.stop();
+  channel.onmessage = async function (event) {
+    let status = await document.getElementById("status-text");
+
+    if (event.data === "1") {
+      audio.play();
+      status.style.background = "#FF4A4A";
+      status.textContent = "Drowsiness Detected";
+    } else {
+      audio.stop();
+      status.style.background = "#a2ffa5";
+    }
   };
 
   var constraints = {
@@ -226,7 +205,10 @@ function start() {
   }
 }
 
-function stop() {
+const stop = async () => {
+  let status = await document.getElementById("status-text");
+  console.log(status);
+
   audio.pause();
   // close data channel
   if (dc) {
@@ -251,7 +233,7 @@ function stop() {
   setTimeout(function () {
     pc.close();
   }, 500);
-}
+};
 
 function sdpFilterCodec(kind, codec, realSdp) {
   var allowed = [];
