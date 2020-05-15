@@ -1,3 +1,5 @@
+// get audio source
+var audio = new Audio("alarm.wav");
 // get DOM elements
 var dataChannelLog = document.getElementById("data-channel"),
   iceConnectionLog = document.getElementById("ice-connection-state"),
@@ -183,7 +185,15 @@ function start() {
 
   var channel = pc.createDataChannel("ALARM", { negotiated: true, id: 0 });
   channel.onmessage = function (event) {
-    console.log(event.data);
+    audio.addEventListener(
+      "ended",
+      function () {
+        this.currentTime = 0;
+        this.play();
+      },
+      false
+    );
+    audio.play("sound.wav");
   };
 
   var constraints = {
@@ -224,6 +234,7 @@ function start() {
 }
 
 function stop() {
+  audio.stop();
   // close data channel
   if (dc) {
     dc.close();
