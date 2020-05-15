@@ -24,6 +24,7 @@ import playsound
 import argparse
 import imutils
 import dlib
+import random
 
 
 shape_predictor = "shape_predictor_68_face_landmarks.dat"
@@ -31,9 +32,14 @@ shape_predictor = "shape_predictor_68_face_landmarks.dat"
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(shape_predictor)
 
-EYE_AR_THRESH = 0.20
-EYE_AR_CONSEC_FRAMES = 10
+# EYE_AR_THRESH = 0.20
+EYE_MIN_CLOSING_TH = 0.1
+EYE_CLOSING_TH_RATIO = 1.5
 
+EYE_LR_CONSEC_FRAMES = 60
+EYE_TEC_RATIO = 0.50
+EYE_TECT_MIN_FRAMES = 500
+EYE_BTD_CONSEC_FRAMES = 150
 ROOT = os.path.dirname(__file__)
 
 logger = logging.getLogger("pc")
@@ -57,7 +63,6 @@ def eye_aspect_ratio(eye):
     return ear
 
 
-
 class VideoTransformTrack(MediaStreamTrack):
     """
     A video stream track that transforms frames from an another track.
@@ -65,23 +70,48 @@ class VideoTransformTrack(MediaStreamTrack):
 
     kind = "video"
 
-    def __init__(self, track, transform):
+    def __init__(self, track, transform, pc):
         super().__init__()  # don't forget this!
         self.track = track
         self.transform = transform
-        (self.lStart, self.lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
-        (self.rStart, self.rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
-        self.COUNTER = 0
+        self.pc = pc
+
+        self.channel = pc.createDataChannel("ALARM", negotiated=True, id=0)
+
+        (self.lStart, self.lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
+        (self.rStart,
+         self.rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
+
+        self.cont_counter = 0  # For Long CLosures (LC)
+        self.counter = 0  # For Percent Time with eyes closed (TEC)
+        self.btd_counter = 0  # For Blink Total Duration
+        self.btd_counter_trig = 0
+
+        self.LC_trig = False
+        self.TEC_trig = False
+        self.BTD_trig = False
+
+        self.alert_msg = ""
+
         self.ear = 0
 
+        self.prevAlarmState = False
         self.ALARM_ON = False
+
+        self.total_ear = 0
+        self.total_frames = 0
+        self.frame_no = 0
+
+        self.open_th = 0.20
+        self.closing_th = 0.15
 
         print("Initialised")
 
-
     async def recv(self):
+        self.frame_no += 1
         frame = await self.track.recv()
+        # print(vars(self.pc))
 
         if self.transform == "cartoon":
             img = frame.to_ndarray(format="bgr24")
@@ -126,7 +156,8 @@ class VideoTransformTrack(MediaStreamTrack):
             # rotate image
             img = frame.to_ndarray(format="bgr24")
             rows, cols, _ = img.shape
-            M = cv2.getRotationMatrix2D((cols / 2, rows / 2), frame.time * 45, 1)
+            M = cv2.getRotationMatrix2D(
+                (cols / 2, rows / 2), frame.time * 45, 1)
             img = cv2.warpAffine(img, M, (cols, rows))
 
             # rebuild a VideoFrame, preserving timing information
@@ -134,7 +165,6 @@ class VideoTransformTrack(MediaStreamTrack):
             new_frame.pts = frame.pts
             new_frame.time_base = frame.time_base
             return new_frame
-        
 
         else:
             # print("here")
@@ -180,40 +210,118 @@ class VideoTransformTrack(MediaStreamTrack):
                 leftEyeHull = cv2.convexHull(leftEye)
                 rightEyeHull = cv2.convexHull(rightEye)
                 # print(ear)
-                if ear < EYE_AR_THRESH:
-                    self.COUNTER += 1
-                    if self.COUNTER >= EYE_AR_CONSEC_FRAMES:
-                        # if the alarm is not on, turn it on
-                        if not self.ALARM_ON:
-                            self.ALARM_ON = True
+                if ear < self.closing_th:
+                    self.total_ear += self.closing_th
+                    self.cont_counter += 1
+                    # self.counter+=1
+                    self.btd_counter_trig = 1
+                    self.LC_trig = (self.cont_counter >= EYE_LR_CONSEC_FRAMES)
 
-                        cv2.putText(img, "Alert", (200, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    # TEC_trig = self.counter/(self.total_frames+1) > 0.4
+
+                    # if LC_trig or TEC_trig:  # Alert
+
+                    #     if True not in self.ALARM_ON:
+                    #         s = ""
+                    #         if LC_trig:
+                    #             self.ALARM_ON[0]=True
+                    #             s="LC Triggered"
+
+                    #         if TEC_trig:
+                    #             self.ALARM_ON[1] = True
+                    #             s="TEC Triggered"
+
+                    #         cv2.putText(img, s, (170, 25),
+                    #                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+
+                    #     # if the alarm is not on, turn it on
+                    #     if not self.ALARM_ON:
+                    #         self.ALARM_ON = True
+
+                    # cv2.putText(img, "Alert", (180, 50),
+                    #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                     # else:
                     #     cv2.putText(frame, "Total face detected = {}".format(len(rects)), (10, 30),
                     #                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 else:
-                    self.COUNTER = 0
-                    self.ALARM_ON = False
+                    self.total_ear += ear
+                    self.cont_counter = 0
+                    self.LC_trig = False
+
+                TEC_open = True
+                if ear >= self.open_th:
+                    self.btd_counter = 0
+                    self.btd_counter_trig = 0
+                    self.TEC_trig = False
+                    TEC_open = False
+
+                if ear < (self.open_th+self.closing_th)/2:
+                    self.counter += 1
+
+                if self.btd_counter_trig:
+                    self.btd_counter += 1
 
                 # cv2.putText(img, "EAR: {:.2f}".format(ear), (300, 30),
                 #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 cv2.putText(img, "EAR: {:.2f}".format(ear), (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            if not self.ALARM_ON:
-            	pass
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+                # self.total_ear += ear
+                self.total_frames += 1
+                self.open_th = self.total_ear/self.total_frames
+                self.closing_th = max(EYE_MIN_CLOSING_TH,
+                                      self.open_th/EYE_CLOSING_TH_RATIO)
+
+                # print(self.counter,self.total_frames)
+                self.TEC_trig = (self.counter/self.total_frames >
+                                 EYE_TEC_RATIO) and TEC_open and self.total_frames > EYE_TECT_MIN_FRAMES
+
+                self.BTD_trig = (self.btd_counter >= EYE_BTD_CONSEC_FRAMES)
+
+                self.ALARM_ON = False
+
+                if self.LC_trig or self.TEC_trig or self.BTD_trig:  # Alert
+
+                    self.ALARM_ON = True
+
+                    if self.LC_trig:
+                        self.alert_msg = "LC Triggered"
+
+                    elif self.TEC_trig:
+                        self.alert_msg = "TEC Triggered"
+
+                    elif self.BTD_trig:
+                        self.alert_msg = "BTD Triggered"
+
+                    cv2.putText(img, self.alert_msg, (130, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
+                    cv2.putText(img, "Alert", (180, 60),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
                 # cv2.putText(img, "Total face detected = {}".format(len(rects)), (10, 30),
                 #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-            
-            # cv2.imwrite('temp2.jpg', img)
-
+                break
             # ret, jpeg = cv2.imencode('.jpg', frame)
             # return jpeg.tobytes()
+            cv2.putText(img, "Open Th.: {:.2f}".format(self.open_th), (10, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+            cv2.putText(img, "Closed Th: {:.2f}".format(self.closing_th), (10, 70),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+
+            cv2.imwrite('imgs/temp{}.jpg'.format(random.random()), img)
+
             new_frame = VideoFrame.from_ndarray(img, format="bgr24")
             new_frame.pts = frame.pts
             new_frame.time_base = frame.time_base
-            # print(self.COUNTER)
+            # print(self.total_frames)
+            # print(self.cont_counter)
+            if self.ALARM_ON != self.prevAlarmState:
+                if self.ALARM_ON:
+                    self.channel.send("1")
+                else:
+                    self.channel.send("0")
+                self.prevAlarmState = self.ALARM_ON
+                # print(self.ALARM_ON)
             return new_frame
 
 
@@ -230,10 +338,12 @@ async def javascript(request):
 async def offer(request):
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-
+    # print(offer)
+    # print(vars(offer))
     pc = RTCPeerConnection()
     pc_id = "PeerConnection(%s)" % uuid.uuid4()
     pcs.add(pc)
+    # print(vars(pc))
 
     def log_info(msg, *args):
         logger.info(pc_id + " " + msg, *args)
@@ -241,7 +351,7 @@ async def offer(request):
     log_info("Created for %s", request.remote)
 
     # prepare local media
-    player = MediaPlayer(os.path.join(ROOT, "demo-instruct.wav"))
+    player = MediaPlayer(os.path.join(ROOT, "alarm.wav"))
     if args.write_audio:
         recorder = MediaRecorder(args.write_audio)
     else:
@@ -264,15 +374,21 @@ async def offer(request):
     @pc.on("track")
     def on_track(track):
         log_info("Track %s received", track.kind)
+        # print("pp")
 
         if track.kind == "audio":
             pc.addTrack(player.audio)
             recorder.addTrack(track)
         elif track.kind == "video":
             local_video = VideoTransformTrack(
-                track, transform=params["video_transform"]
+                track, transform=params["video_transform"], pc=pc
             )
+            # print(local_video)
+            # print(vars(local_video))
+
+            # print("pp2")
             pc.addTrack(local_video)
+            # pc.addTrack(player.audio)
 
         @track.on("ended")
         async def on_ended():
@@ -326,9 +442,10 @@ if __name__ == "__main__":
     else:
         ssl_context = None
 
-    app = web.Application()
+    print("Here")
+    application = app = web.Application()
     app.on_shutdown.append(on_shutdown)
     app.router.add_get("/", index)
     app.router.add_get("/client.js", javascript)
     app.router.add_post("/offer", offer)
-    web.run_app(app, access_log=None, port=os.getenv("PORT",8080), ssl_context=ssl_context)
+    web.run_app(app, access_log=None, port=args.port, ssl_context=ssl_context)
