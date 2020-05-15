@@ -159,11 +159,19 @@ function start() {
     let status = await document.getElementById("status-text");
 
     if (event.data === "1") {
+      audio.addEventListener(
+        "ended",
+        function () {
+          this.currentTime = 0;
+          this.play();
+        },
+        false
+      );
       audio.play();
       status.style.background = "#FF4A4A";
       status.textContent = "Drowsiness Detected";
     } else {
-      audio.stop();
+      audio.pause();
       status.style.background = "#a2ffa5";
     }
   };
@@ -294,4 +302,14 @@ function sdpFilterCodec(kind, codec, realSdp) {
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+}
+
+// drawer
+
+function openSlideMenu() {
+  document.getElementById("side-menu").style.width = "100%";
+}
+
+function closeSlideMenu() {
+  document.getElementById("side-menu").style.width = "0";
 }
