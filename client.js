@@ -1,5 +1,5 @@
 // get audio source
-var audio = new Audio("alarm.wav");
+var audio = new Audio("https://fiestoassets.s3.amazonaws.com/Drooz/alarm.wav");
 // get DOM elements
 var dataChannelLog = document.getElementById("data-channel"),
   iceConnectionLog = document.getElementById("ice-connection-state"),
@@ -227,7 +227,7 @@ function start() {
 }
 
 function stop() {
-  audio.stop();
+  audio.pause();
   // close data channel
   if (dc) {
     dc.close();
