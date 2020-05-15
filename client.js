@@ -20,6 +20,7 @@ function createPeerConnection() {
   };
 
   if (document.getElementById("use-stun").checked) {
+    alert("helo");
     config.iceServers = [
       {
         urls: "stun:stun.l.google.com:19302",
@@ -173,6 +174,7 @@ function start() {
     } else {
       audio.pause();
       status.style.background = "#a2ffa5";
+      status.textContent = "You Look Awesome!";
     }
   };
 
@@ -216,6 +218,8 @@ function start() {
 const stop = async () => {
   let status = await document.getElementById("status-text");
   console.log(status);
+
+  status.textContent = "You Look Awesome!";
 
   audio.pause();
   // close data channel
