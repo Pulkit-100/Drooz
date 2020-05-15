@@ -185,15 +185,8 @@ function start() {
 
   var channel = pc.createDataChannel("ALARM", { negotiated: true, id: 0 });
   channel.onmessage = function (event) {
-    audio.addEventListener(
-      "ended",
-      function () {
-        this.currentTime = 0;
-        this.play();
-      },
-      false
-    );
-    audio.play("sound.wav");
+    if (event.data === "1") audio.play();
+    else audio.stop();
   };
 
   var constraints = {
