@@ -25,3 +25,37 @@
     of eyes. The perception of eye development is essentially in
     view of the driver's condition.
 </p>
+
+<p>
+    As of now, a threshold hard-coded EAR is fed to the system that is used to detect if the user is
+    drowsy or not which is medically incorrect. The fatigue level should be monitored on various
+    parameters like:
+</p>
+
+<ol>
+    <li>Percentage Long Closure</li>
+    <li>Blink Total Duration</li>
+    <li>Inter-Event Duration</li>
+</ol>
+
+![Capture](https://user-images.githubusercontent.com/35224521/82485226-be178200-9af8-11ea-988b-a629ad418ad3.JPG)
+
+
+<h1>Implementation</h1>
+<ul>
+<li>
+    
+    Awake state
+    
+   ![WhatsApp Image 2020-05-20 at 11 01 25 PM](https://user-images.githubusercontent.com/35224521/82483061-6592b580-9af5-11ea-92ed-5959df423f59.jpeg)
+    
+</li>
+    
+<li>
+    
+    Drowsy state
+    
+   ![WhatsApp Image 2020-05-20 at 11 01 12 PM](https://user-images.githubusercontent.com/35224521/82482958-3d0abb80-9af5-11ea-9b45-6cb202d42774.jpeg)
+   
+</li>
+</ul>
