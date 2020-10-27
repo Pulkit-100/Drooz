@@ -17,7 +17,7 @@ chardet==3.0.4
 colorama==0.3.9
 crc32c==2.0
 crcmod==1.7
-cryptography==2.9
+cryptography==3.2
 Django==3.0.3
 dlib==19.19.0
 docker==4.2.0
