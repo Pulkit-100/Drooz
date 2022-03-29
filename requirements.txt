@@ -37,7 +37,7 @@ netifaces==0.10.9
 numpy==1.18.1
 opencv-contrib-python==4.2.0.32
 pandas==1.0.1
-paramiko==2.7.1
+paramiko==2.10.1
 pathspec==0.5.9
 pkg-resources==0.0.0
 playsound==1.2.2
