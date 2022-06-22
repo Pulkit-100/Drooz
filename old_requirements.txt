@@ -17,7 +17,7 @@ idna-ssl==1.1.0
 imutils==0.5.3
 multidict==4.7.5
 netifaces==0.10.9
-numpy==1.18.1
+numpy==1.22.0
 opencv-contrib-python==4.2.0.32
 pandas==1.0.1
 playsound==1.2.2
